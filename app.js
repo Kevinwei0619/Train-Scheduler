@@ -11,9 +11,9 @@
         firebase.initializeApp(config);
 
         var db = firebase.database();
-        var count = 0;
         var timeNow;
         var currentTime = moment();
+        var count=0;
         
        
 
@@ -23,23 +23,22 @@
 
             var trainName = $("#trainName").val().trim();
             var dest = $("#dest").val().trim();
-            var freq = $("#freq").val().trim();
             var firstTrainTime = $("#firstTrainTime").val().trim();
+            var freq = $("#freq").val().trim();
+            
 
-            console.log(firstTrainTime);
+            console.log("the time user type:" , firstTrainTime);
 
     
 
-            var timeNow = moment(currentTime).format("dddd, MMMM Do YYYY, hh:mm A");
-
-            var timeTest = moment(firstTrainTime).format("dddd, MMMM Do YYYY, hh:mm A");
-            
-           
+            var timeNow = moment(currentTime ,"MM/DD/YYYY , hh:mm A").format("dddd, MMMM Do YYYY, hh:mm A");
             console.log("CURRENT TIME: " + timeNow );
-            console.log("time we want:" +  timeTest);
+
+            var timeTest = moment(firstTrainTime , "dddd, MMMM Do YYYY, HH:mm a").format("hh:mm A");
+            console.log("time user type:" +  timeTest);
 
             var firstTimeConverted = moment(firstTrainTime, "dddd, MMMM Do YYYY, HH:mm a").subtract(1, "days");    
-            console.log(firstTimeConverted + "  time we converted");
+            console.log( "time we converted:" , firstTimeConverted);
 
 
 
@@ -48,7 +47,7 @@
         
             // Time apart (remainder)
             var tRemainder = diffTime % freq;
-            console.log(tRemainder);
+            console.log("the time remainder:",tRemainder);
         
             // Minute Until Train
             var tMinutesTillTrain = freq - tRemainder;
@@ -59,12 +58,11 @@
             var arrivalTime = moment(nextTrain).format("dddd, MMMM Do YYYY, hh:mm A");
             console.log("ARRIVAL TIME: " + arrivalTime);
        
-           
+
 
 
             // Code for "Setting values in the database"
             db.ref().push({
-                count:count,
                 name: trainName,
                 dest: dest,
                 freq: freq,
@@ -74,7 +72,6 @@
                 dateAdded: firebase.database.ServerValue.TIMESTAMP
             });
 
-            count++;
 
             alert("added new Train");
 
@@ -96,18 +93,35 @@
 
 
 
- db.ref().on("child_added", function(childSnapshot) {
+db.ref().on("child_added", function(childSnapshot) {
+    var key = childSnapshot.key;
+    console.log(key);
+    
+
       
       // Log everything that's coming out of snapshot
     //   console.log(childSnapshot.val().name);
     //   console.log(childSnapshot.val().dest);
     //   console.log(childSnapshot.val().freq);
-    //   console.log(childSnapshot.val().firstTrainTime);       
+    //   console.log(childSnapshot.val().firstTrainTime);
 
-$("#tbody").append("<tr><td>" + childSnapshot.val().count + "</td><td>" + childSnapshot.val().name + "</td><td>" + childSnapshot.val().dest + "</td><td>" +
-childSnapshot.val().freq + "</td><td>" + childSnapshot.val().arrivalTime  + "</td><td>" + childSnapshot.val().minutesAway + "</td></tr>");
+$("#tbody").append("<tr class = item  id="+key+ "><td>" + childSnapshot.val().name + "</td><td>" + childSnapshot.val().dest + "</td><td>" +
+childSnapshot.val().freq + "</td><td>" + childSnapshot.val().arrivalTime  + "</td><td>" + childSnapshot.val().minutesAway + " </td></tr>");
   
       // Handle the errors
     }, function(errorObject) {
       console.log("Errors handled: " + errorObject.code);
     });
+
+
+db.ref().on("child_removed" , function(snapshot){
+    var firebaseID = snapshot.key;
+    $("#" + firebaseID).remove();
+})
+
+$(document).on("click" , ".item" , function(e){
+    var firebaseID = $(this).attr("id");
+    db.ref(firebaseID).remove();
+  
+
+})
